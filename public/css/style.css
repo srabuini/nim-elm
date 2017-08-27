@@ -1,0 +1,9 @@
+li {
+  list-style-type: none;
+  height: 100px;
+  text-align: center;
+}
+
+.centered {
+  text-align: center;
+}

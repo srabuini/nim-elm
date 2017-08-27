@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nim Game</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/skeleton.css">
+</head>
+
+<body>
+  <div class="container">
+    <section class="header">
+      <p class="centered">The goal of the game is to be the player who removes the last matchstick.</p>
+    </section>
+    <div id="main"></div>
+  </div>
+
+
+
+  <script type="text/javascript" src="js/nim.js"></script>
+  <script>
+      var node = document.getElementById('main');
+      var app = Elm.Nim.embed(node);
+  </script>
+</body>
+
+</html>
