@@ -1,12 +1,12 @@
 port module Nim exposing (..)
 
-import Html exposing (..)
-import Html.Events exposing (..)
-import Html.Attributes exposing (..)
-import String exposing (..)
 import Bitwise
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (..)
 import Random
-import Debug exposing (..)
+import String exposing (..)
+
 
 main =
   Html.program
@@ -20,12 +20,17 @@ main =
 
 -- MODEL
 
+type Player
+  = Computer
+  | Human
+  | None
+
 
 type alias Model =
   { board: List Int
   , currentRow: Maybe Int
   , currentMatches: Int
-  , computerPlays: Maybe Bool
+  , player: Player
   , text: String
   , nextPlayerButtonDisabled: Bool
   , undoButtonDisabled: Bool
@@ -46,7 +51,7 @@ initialText =
 
 emptyModel : Model
 emptyModel =
-  Model [1, 3, 5, 7] Nothing 0 Nothing initialText False True
+  Model [1, 3, 5, 7] Nothing 0 None initialText False True
 
 
 
@@ -54,11 +59,11 @@ emptyModel =
 
 
 type Msg
-  = RemoveMatch Int
-  | ComputerMoves
+  = ComputerMoves
+  | RemoveMatchesFromCurrentRow Int
+  | GetRandomMatchesForRowAt Int
+  | RemoveMatch Int
   | Restart
-  | RandomRow Int
-  | RandomMatches Int
   | Undo
 
 
@@ -75,7 +80,8 @@ removeMatch : Int -> Model -> Model
 removeMatch row model =
   model
     |> removeMatches row 1
-    |> setupNextMove row
+    |> setCurrentRow (Just row)
+    |> setComputerTurn
 
 
 validMove : Model -> Int -> Bool
@@ -218,16 +224,14 @@ setCurrentRow value model =
 setHumanTurn : Model -> Model
 setHumanTurn model =
   { model |
-    computerPlays = Just False
+    player = Human
   }
 
-
-setupNextMove : Int -> Model -> Model
-setupNextMove row model =
+setComputerTurn : Model -> Model
+setComputerTurn model =
   { model |
-     currentRow = Just row,
-     computerPlays = Just True
-   }
+    player = Computer
+  }
 
 
 addSmile : Model -> Model
@@ -252,15 +256,15 @@ afterComputerMoves model =
 
 addWinner : Model -> Model
 addWinner model =
-  case model.computerPlays of
-    Nothing ->
+  case model.player of
+    None ->
       model
 
-    Just True ->
+    Computer ->
       model
         |> addText "You won..."
 
-    Just False ->
+    Human ->
       model
         |> addText "I won!"
 
@@ -344,8 +348,8 @@ update msg model =
       )
 
     ComputerMoves ->
-      case model.computerPlays of
-        Just False ->
+      case model.player of
+        Human ->
           ( model
             |> addText "Hey, You move!", Cmd.none
           )
@@ -355,14 +359,14 @@ update msg model =
             let
               maxIndex = List.length (rowsWithMatches model.board) - 1
             in
-              ( model, Random.generate RandomRow (Random.int 0 maxIndex) )
+              ( model, Random.generate GetRandomMatchesForRowAt (Random.int 0 maxIndex) )
           else
             ( model
               |> winnerMove
               |> afterComputerMoves, Cmd.none
             )
 
-    RandomRow index ->
+    GetRandomMatchesForRowAt index ->
       case rowsWithMatches model.board |> get index of
         Nothing ->
           ( model, Cmd.none )
@@ -374,10 +378,10 @@ update msg model =
 
             Just matches ->
               ( { model | currentRow = Just row }
-              , Random.generate RandomMatches (Random.int 1 matches)
+              , Random.generate RemoveMatchesFromCurrentRow (Random.int 1 matches)
               )
 
-    RandomMatches matches ->
+    RemoveMatchesFromCurrentRow matches ->
       case model.currentRow of
         Just row ->
           ( model
