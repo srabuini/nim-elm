@@ -9099,12 +9099,6 @@ var _user$project$Nim$setUndoButtonDisabled = F2(
 			model,
 			{undoButtonDisabled: value});
 	});
-var _user$project$Nim$setUndoButton = function (model) {
-	return A2(
-		_user$project$Nim$setUndoButtonDisabled,
-		_elm_lang$core$Native_Utils.eq(model.currentMatches, 0),
-		model);
-};
 var _user$project$Nim$incrementMatches = function (model) {
 	return _elm_lang$core$Native_Utils.update(
 		model,
@@ -9143,6 +9137,11 @@ var _user$project$Nim$checkIfFinished = function (model) {
 		true,
 		_user$project$Nim$nextPlayerButtonDisabled(
 			_user$project$Nim$addWinner(model))) : model;
+};
+var _user$project$Nim$resetCurrentMatches = function (model) {
+	return _elm_lang$core$Native_Utils.update(
+		model,
+		{currentMatches: 0});
 };
 var _user$project$Nim$setCurrentRow = F2(
 	function (value, model) {
@@ -9379,20 +9378,8 @@ var _user$project$Nim$afterComputerMoves = function (model) {
 					_user$project$Nim$setUndoButtonDisabled,
 					true,
 					_user$project$Nim$setHumanTurn(
-						A2(_user$project$Nim$setCurrentRow, _elm_lang$core$Maybe$Nothing, model))))));
-};
-var _user$project$Nim$undo = function (model) {
-	var _p10 = model.currentRow;
-	if (_p10.ctor === 'Nothing') {
-		return model;
-	} else {
-		return _user$project$Nim$setHumanTurn(
-			_user$project$Nim$setUndoButton(
-				A2(
-					_user$project$Nim$addText,
-					'I think it was a good move...',
-					A2(_user$project$Nim$addMatch, _p10._0, model))));
-	}
+						_user$project$Nim$resetCurrentMatches(
+							A2(_user$project$Nim$setCurrentRow, _elm_lang$core$Maybe$Nothing, model)))))));
 };
 var _user$project$Nim$Computer = {ctor: 'Computer'};
 var _user$project$Nim$setComputerTurn = function (model) {
@@ -9408,6 +9395,11 @@ var _user$project$Nim$removeMatch = F2(
 				_elm_lang$core$Maybe$Just(row),
 				A3(_user$project$Nim$removeMatches, row, 1, model)));
 	});
+var _user$project$Nim$setUndoButton = function (model) {
+	return _elm_lang$core$Native_Utils.eq(model.currentMatches, 0) ? _user$project$Nim$setHumanTurn(
+		A2(_user$project$Nim$setUndoButtonDisabled, true, model)) : _user$project$Nim$setComputerTurn(
+		A2(_user$project$Nim$setUndoButtonDisabled, false, model));
+};
 var _user$project$Nim$moveIfValid = F2(
 	function (row, model) {
 		return A2(_user$project$Nim$validMove, model, row) ? A2(
@@ -9420,6 +9412,18 @@ var _user$project$Nim$moveIfValid = F2(
 				_user$project$Nim$incrementMatches(
 					A2(_user$project$Nim$removeMatch, row, model)))) : A2(_user$project$Nim$addText, 'Same row, fella 🙄', model);
 	});
+var _user$project$Nim$undo = function (model) {
+	var _p10 = model.currentRow;
+	if (_p10.ctor === 'Nothing') {
+		return model;
+	} else {
+		return _user$project$Nim$setUndoButton(
+			A2(
+				_user$project$Nim$addText,
+				'I think it was a good move...',
+				A2(_user$project$Nim$addMatch, _p10._0, model)));
+	}
+};
 var _user$project$Nim$Undo = {ctor: 'Undo'};
 var _user$project$Nim$Restart = {ctor: 'Restart'};
 var _user$project$Nim$RemoveMatch = function (a) {

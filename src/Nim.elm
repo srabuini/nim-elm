@@ -221,6 +221,13 @@ setCurrentRow value model =
   }
 
 
+resetCurrentMatches : Model -> Model
+resetCurrentMatches model =
+  { model |
+    currentMatches = 0
+  }
+
+
 setHumanTurn : Model -> Model
 setHumanTurn model =
   { model |
@@ -247,6 +254,7 @@ afterComputerMoves : Model -> Model
 afterComputerMoves model =
   model
     |> setCurrentRow Nothing
+    |> resetCurrentMatches
     |> setHumanTurn
     |> setUndoButtonDisabled True
     |> addText  "You move!"
@@ -296,8 +304,14 @@ incrementMatches model =
 
 setUndoButton : Model -> Model
 setUndoButton model =
-    model |> setUndoButtonDisabled (model.currentMatches == 0)
-
+  if (model.currentMatches == 0) then
+    model
+      |> setUndoButtonDisabled True
+      |> setHumanTurn
+  else
+    model
+      |> setUndoButtonDisabled False
+      |> setComputerTurn
 
 setUndoButtonDisabled : Bool -> Model -> Model
 setUndoButtonDisabled value model =
@@ -315,7 +329,6 @@ undo model =
         |> addMatch row
         |> addText "I think it was a good move..."
         |> setUndoButton
-        |> setHumanTurn
 
 
 addMatch : Int -> Model -> Model
