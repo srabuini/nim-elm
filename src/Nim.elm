@@ -58,6 +58,7 @@ type Msg
   | ComputerMoves
   | Restart
   | RandomRow Int
+  | RandomMatches Int
   | Undo
 
 
@@ -68,6 +69,7 @@ removeMatches row matches model =
       model.board
         |> (List.indexedMap (\i x -> if i == row then x - matches else x))
   }
+
 
 removeMatch : Int -> Model -> Model
 removeMatch row model =
@@ -143,9 +145,14 @@ filterIndex predicate index newList list =
         filterIndex predicate (index + 1) newList rest
 
 
-rowsWithMatches : Model -> List Int
-rowsWithMatches model =
-  model.board |> filterIndex (\n -> n > 0) 0 []
+rowsWithMatches : List Int -> List Int
+rowsWithMatches board =
+  board |> filterIndex (\n -> n > 0) 0 []
+
+
+matchesInRow : Int -> List Int -> Maybe Int
+matchesInRow index board =
+  get index board
 
 
 get : Int -> List Int -> Maybe Int
@@ -153,15 +160,6 @@ get index list =
   list
     |> List.drop index
     |> List.head
-
-
-randomMove : Int -> Model -> Model
-randomMove index model =
-  let
-    rows = rowsWithMatches model
-    row = rows |> get index
-  in
-    model |> removeMatch (Maybe.withDefault 0 row)
 
 
 winnerNumber : Int -> Int -> Maybe Int
@@ -210,10 +208,10 @@ winnerMove model =
         model
 
 
-removeCurrentRow : Model -> Model
-removeCurrentRow model =
+setCurrentRow : Maybe Int -> Model -> Model
+setCurrentRow value model =
   { model |
-    currentRow = Nothing
+    currentRow = value
   }
 
 
@@ -244,7 +242,7 @@ addSmile model =
 afterComputerMoves : Model -> Model
 afterComputerMoves model =
   model
-    |> removeCurrentRow
+    |> setCurrentRow Nothing
     |> humanPlays
     |> setUndoButtonDisabled True
     |> addText  "You move!"
@@ -333,6 +331,7 @@ addMatch row model =
           , currentRow = currentRow}
 
 
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
   case msg of
@@ -347,32 +346,51 @@ update msg model =
       case model.computerPlays of
         Just False ->
           ( model
-            |> addText "Hey, You move!"
-            , Cmd.none
+            |> addText "Hey, You move!", Cmd.none
           )
 
         _ ->
           if noWinnerMove model.board then
             let
-              rows = List.length (rowsWithMatches model) - 1
+              maxIndex = List.length (rowsWithMatches model.board) - 1
             in
-              ( model, Random.generate RandomRow (Random.int 0 rows) )
+              ( model, Random.generate RandomRow (Random.int 0 maxIndex) )
           else
             ( model
               |> winnerMove
-              |> afterComputerMoves
-              , Cmd.none )
+              |> afterComputerMoves, Cmd.none
+            )
 
     RandomRow index ->
-      ( model
-        |> randomMove index
-        |> afterComputerMoves
-        , Cmd.none )
+      case rowsWithMatches model.board |> get index of
+        Nothing ->
+          ( model, Cmd.none )
+
+        Just row ->
+          case matchesInRow row model.board of
+            Nothing ->
+              ( model, Cmd.none )
+
+            Just matches ->
+              ( { model | currentRow = Just row }
+              , Random.generate RandomMatches (Random.int 1 matches)
+              )
+
+    RandomMatches matches ->
+      case model.currentRow of
+        Just row ->
+          ( model
+            |> removeMatches row matches
+            |> afterComputerMoves, Cmd.none
+          )
+
+        Nothing ->
+          ( model, Cmd.none )
 
     Undo ->
       ( model
-        |> undo
-        , Cmd.none )
+        |> undo, Cmd.none
+      )
 
     Restart ->
       ( emptyModel, Cmd.none )
