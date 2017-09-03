@@ -9116,29 +9116,17 @@ var _user$project$Nim$addText = F2(
 			model,
 			{text: message});
 	});
-var _user$project$Nim$undo = function (model) {
-	var _p1 = model.currentRow;
-	if (_p1.ctor === 'Nothing') {
-		return model;
-	} else {
-		return _user$project$Nim$setUndoButton(
-			A2(
-				_user$project$Nim$addText,
-				'I think it was a good move...',
-				A2(_user$project$Nim$addMatch, _p1._0, model)));
-	}
-};
 var _user$project$Nim$nextPlayerButtonDisabled = function (model) {
 	return _elm_lang$core$Native_Utils.update(
 		model,
 		{nextPlayerButtonDisabled: true});
 };
 var _user$project$Nim$addWinner = function (model) {
-	var _p2 = model.computerPlays;
-	if (_p2.ctor === 'Nothing') {
+	var _p1 = model.computerPlays;
+	if (_p1.ctor === 'Nothing') {
 		return model;
 	} else {
-		if (_p2._0 === true) {
+		if (_p1._0 === true) {
 			return A2(_user$project$Nim$addText, 'You won...', model);
 		} else {
 			return A2(_user$project$Nim$addText, 'I won!', model);
@@ -9166,12 +9154,25 @@ var _user$project$Nim$setupNextMove = F2(
 				computerPlays: _elm_lang$core$Maybe$Just(true)
 			});
 	});
-var _user$project$Nim$humanPlays = function (model) {
+var _user$project$Nim$setHumanTurn = function (model) {
 	return _elm_lang$core$Native_Utils.update(
 		model,
 		{
 			computerPlays: _elm_lang$core$Maybe$Just(false)
 		});
+};
+var _user$project$Nim$undo = function (model) {
+	var _p2 = model.currentRow;
+	if (_p2.ctor === 'Nothing') {
+		return model;
+	} else {
+		return _user$project$Nim$setHumanTurn(
+			_user$project$Nim$setUndoButton(
+				A2(
+					_user$project$Nim$addText,
+					'I think it was a good move...',
+					A2(_user$project$Nim$addMatch, _p2._0, model))));
+	}
 };
 var _user$project$Nim$setCurrentRow = F2(
 	function (value, model) {
@@ -9318,7 +9319,7 @@ var _user$project$Nim$afterComputerMoves = function (model) {
 				A2(
 					_user$project$Nim$setUndoButtonDisabled,
 					true,
-					_user$project$Nim$humanPlays(
+					_user$project$Nim$setHumanTurn(
 						A2(_user$project$Nim$setCurrentRow, _elm_lang$core$Maybe$Nothing, model))))));
 };
 var _user$project$Nim$winnerRows = function (list) {

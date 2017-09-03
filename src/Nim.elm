@@ -215,8 +215,8 @@ setCurrentRow value model =
   }
 
 
-humanPlays : Model -> Model
-humanPlays model =
+setHumanTurn : Model -> Model
+setHumanTurn model =
   { model |
     computerPlays = Just False
   }
@@ -243,7 +243,7 @@ afterComputerMoves : Model -> Model
 afterComputerMoves model =
   model
     |> setCurrentRow Nothing
-    |> humanPlays
+    |> setHumanTurn
     |> setUndoButtonDisabled True
     |> addText  "You move!"
     |> addSmile
@@ -311,6 +311,7 @@ undo model =
         |> addMatch row
         |> addText "I think it was a good move..."
         |> setUndoButton
+        |> setHumanTurn
 
 
 addMatch : Int -> Model -> Model
