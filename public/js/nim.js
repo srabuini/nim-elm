@@ -9257,7 +9257,7 @@ var _user$project$Nim$findIndex = F2(
 	function (predicate, list) {
 		return A3(_user$project$Nim$findIndex_, predicate, list, 0);
 	});
-var _user$project$Nim$sumXor = function (list) {
+var _user$project$Nim$sumXor = function (board) {
 	return A3(
 		_elm_lang$core$List$foldr,
 		F2(
@@ -9265,7 +9265,7 @@ var _user$project$Nim$sumXor = function (list) {
 				return a ^ b;
 			}),
 		0,
-		list);
+		board);
 };
 var _user$project$Nim$noWinnerMove = function (board) {
 	return _elm_lang$core$Native_Utils.eq(
@@ -9279,12 +9279,12 @@ var _user$project$Nim$addSmile = function (model) {
 			text: A2(_elm_lang$core$Basics_ops['++'], model.text, '😎')
 		}) : model;
 };
-var _user$project$Nim$winnerRows = function (list) {
+var _user$project$Nim$winnerRows = function (board) {
 	return A2(
 		_elm_lang$core$List$map,
 		_user$project$Nim$winnerNumber(
-			_user$project$Nim$sumXor(list)),
-		list);
+			_user$project$Nim$sumXor(board)),
+		board);
 };
 var _user$project$Nim$validMove = F2(
 	function (model, row) {
@@ -9295,7 +9295,7 @@ var _user$project$Nim$validMove = F2(
 			return _elm_lang$core$Native_Utils.eq(_p7._0, row) ? true : false;
 		}
 	});
-var _user$project$Nim$removeMatches = F3(
+var _user$project$Nim$removeMatchesRandom = F3(
 	function (row, matches, model) {
 		return _elm_lang$core$Native_Utils.update(
 			model,
@@ -9318,11 +9318,20 @@ var _user$project$Nim$winnerMove = function (model) {
 	var matches = _p8._1;
 	var _p9 = {ctor: '_Tuple2', _0: row, _1: matches};
 	if (((_p9.ctor === '_Tuple2') && (_p9._0.ctor === 'Just')) && (_p9._1.ctor === 'Just')) {
-		return A3(_user$project$Nim$removeMatches, _p9._0._0, _p9._1._0, model);
+		return A3(_user$project$Nim$removeMatchesRandom, _p9._0._0, _p9._1._0, model);
 	} else {
 		return model;
 	}
 };
+var _user$project$Nim$computerMove = F2(
+	function (kind, model) {
+		var _p10 = kind;
+		if (_p10.ctor === 'Winner') {
+			return _user$project$Nim$winnerMove(model);
+		} else {
+			return A3(_user$project$Nim$removeMatchesRandom, _p10._0, _p10._1, model);
+		}
+	});
 var _user$project$Nim$nextButtonTitle = 'Computer Moves';
 var _user$project$Nim$initialText = A2(
 	_elm_lang$core$Basics_ops['++'],
@@ -9336,51 +9345,58 @@ var _user$project$Nim$Model = F7(
 		return {board: a, currentRow: b, currentMatches: c, player: d, text: e, nextPlayerButtonDisabled: f, undoButtonDisabled: g};
 	});
 var _user$project$Nim$None = {ctor: 'None'};
-var _user$project$Nim$emptyModel = A7(
-	_user$project$Nim$Model,
-	{
-		ctor: '::',
-		_0: 1,
-		_1: {
+var _user$project$Nim$init = {
+	ctor: '_Tuple2',
+	_0: A7(
+		_user$project$Nim$Model,
+		{
 			ctor: '::',
-			_0: 3,
+			_0: 1,
 			_1: {
 				ctor: '::',
-				_0: 5,
+				_0: 3,
 				_1: {
 					ctor: '::',
-					_0: 7,
-					_1: {ctor: '[]'}
+					_0: 5,
+					_1: {
+						ctor: '::',
+						_0: 7,
+						_1: {ctor: '[]'}
+					}
 				}
 			}
-		}
-	},
-	_elm_lang$core$Maybe$Nothing,
-	0,
-	_user$project$Nim$None,
-	_user$project$Nim$initialText,
-	false,
-	true);
-var _user$project$Nim$init = {ctor: '_Tuple2', _0: _user$project$Nim$emptyModel, _1: _elm_lang$core$Platform_Cmd$none};
+		},
+		_elm_lang$core$Maybe$Nothing,
+		0,
+		_user$project$Nim$None,
+		_user$project$Nim$initialText,
+		false,
+		true),
+	_1: _elm_lang$core$Platform_Cmd$none
+};
 var _user$project$Nim$Human = {ctor: 'Human'};
 var _user$project$Nim$setHumanTurn = function (model) {
 	return _elm_lang$core$Native_Utils.update(
 		model,
 		{player: _user$project$Nim$Human});
 };
-var _user$project$Nim$afterComputerMoves = function (model) {
-	return _user$project$Nim$checkIfFinished(
-		_user$project$Nim$addSmile(
-			A2(
-				_user$project$Nim$addText,
-				'You move!',
+var _user$project$Nim$computerPlay = F2(
+	function (kind, model) {
+		return _user$project$Nim$checkIfFinished(
+			_user$project$Nim$addSmile(
 				A2(
-					_user$project$Nim$setUndoButtonDisabled,
-					true,
-					_user$project$Nim$setHumanTurn(
-						_user$project$Nim$resetCurrentMatches(
-							A2(_user$project$Nim$setCurrentRow, _elm_lang$core$Maybe$Nothing, model)))))));
-};
+					_user$project$Nim$addText,
+					'You move!',
+					A2(
+						_user$project$Nim$setUndoButtonDisabled,
+						true,
+						_user$project$Nim$setHumanTurn(
+							_user$project$Nim$resetCurrentMatches(
+								A2(
+									_user$project$Nim$setCurrentRow,
+									_elm_lang$core$Maybe$Nothing,
+									A2(_user$project$Nim$computerMove, kind, model))))))));
+	});
 var _user$project$Nim$Computer = {ctor: 'Computer'};
 var _user$project$Nim$setComputerTurn = function (model) {
 	return _elm_lang$core$Native_Utils.update(
@@ -9393,7 +9409,7 @@ var _user$project$Nim$removeMatch = F2(
 			A2(
 				_user$project$Nim$setCurrentRow,
 				_elm_lang$core$Maybe$Just(row),
-				A3(_user$project$Nim$removeMatches, row, 1, model)));
+				A3(_user$project$Nim$removeMatchesRandom, row, 1, model)));
 	});
 var _user$project$Nim$setUndoButton = function (model) {
 	return _elm_lang$core$Native_Utils.eq(model.currentMatches, 0) ? _user$project$Nim$setHumanTurn(
@@ -9412,18 +9428,40 @@ var _user$project$Nim$moveIfValid = F2(
 				_user$project$Nim$incrementMatches(
 					A2(_user$project$Nim$removeMatch, row, model)))) : A2(_user$project$Nim$addText, 'Same row, fella 🙄', model);
 	});
+var _user$project$Nim$humanRemovesMatch = F2(
+	function (row, model) {
+		return _user$project$Nim$checkIfFinished(
+			A2(_user$project$Nim$moveIfValid, row, model));
+	});
 var _user$project$Nim$undo = function (model) {
-	var _p10 = model.currentRow;
-	if (_p10.ctor === 'Nothing') {
+	var _p11 = model.currentRow;
+	if (_p11.ctor === 'Nothing') {
 		return model;
 	} else {
 		return _user$project$Nim$setUndoButton(
 			A2(
 				_user$project$Nim$addText,
-				'I think it was a good move...',
-				A2(_user$project$Nim$addMatch, _p10._0, model)));
+				'I think that was a good move...',
+				A2(_user$project$Nim$addMatch, _p11._0, model)));
 	}
 };
+var _user$project$Nim$Winner = {ctor: 'Winner'};
+var _user$project$Nim$Random = F2(
+	function (a, b) {
+		return {ctor: 'Random', _0: a, _1: b};
+	});
+var _user$project$Nim$removeFromCurrentRow = F2(
+	function (matches, model) {
+		var _p12 = model.currentRow;
+		if (_p12.ctor === 'Just') {
+			return A2(
+				_user$project$Nim$computerPlay,
+				A2(_user$project$Nim$Random, _p12._0, matches),
+				model);
+		} else {
+			return model;
+		}
+	});
 var _user$project$Nim$Undo = {ctor: 'Undo'};
 var _user$project$Nim$Restart = {ctor: 'Restart'};
 var _user$project$Nim$RemoveMatch = function (a) {
@@ -9453,91 +9491,90 @@ var _user$project$Nim$rowContent = F2(
 				},
 				A2(_elm_lang$core$List$range, 0, elements - 1)));
 	});
-var _user$project$Nim$GetRandomMatchesForRowAt = function (a) {
-	return {ctor: 'GetRandomMatchesForRowAt', _0: a};
+var _user$project$Nim$GenerateRandomMatchesForRowAt = function (a) {
+	return {ctor: 'GenerateRandomMatchesForRowAt', _0: a};
 };
-var _user$project$Nim$RemoveMatchesFromCurrentRow = function (a) {
-	return {ctor: 'RemoveMatchesFromCurrentRow', _0: a};
+var _user$project$Nim$computerMoves = function (model) {
+	if (_user$project$Nim$noWinnerMove(model.board)) {
+		var maxIndex = _elm_lang$core$List$length(
+			_user$project$Nim$rowsWithMatches(model.board)) - 1;
+		return {
+			ctor: '_Tuple2',
+			_0: model,
+			_1: A2(
+				_elm_lang$core$Random$generate,
+				_user$project$Nim$GenerateRandomMatchesForRowAt,
+				A2(_elm_lang$core$Random$int, 0, maxIndex))
+		};
+	} else {
+		return {
+			ctor: '_Tuple2',
+			_0: A2(_user$project$Nim$computerPlay, _user$project$Nim$Winner, model),
+			_1: _elm_lang$core$Platform_Cmd$none
+		};
+	}
 };
+var _user$project$Nim$RemoveMatchesRandom = function (a) {
+	return {ctor: 'RemoveMatchesRandom', _0: a};
+};
+var _user$project$Nim$generateRandomMatches = F2(
+	function (index, model) {
+		var _p13 = A2(
+			_user$project$Nim$get,
+			index,
+			_user$project$Nim$rowsWithMatches(model.board));
+		if (_p13.ctor === 'Nothing') {
+			return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+		} else {
+			var _p15 = _p13._0;
+			var _p14 = A2(_user$project$Nim$matchesInRow, _p15, model.board);
+			if (_p14.ctor === 'Nothing') {
+				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+			} else {
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							currentRow: _elm_lang$core$Maybe$Just(_p15)
+						}),
+					_1: A2(
+						_elm_lang$core$Random$generate,
+						_user$project$Nim$RemoveMatchesRandom,
+						A2(_elm_lang$core$Random$int, 1, _p14._0))
+				};
+			}
+		}
+	});
 var _user$project$Nim$update = F2(
 	function (msg, model) {
-		var _p11 = msg;
-		switch (_p11.ctor) {
+		var _p16 = msg;
+		switch (_p16.ctor) {
 			case 'RemoveMatch':
 				return {
 					ctor: '_Tuple2',
-					_0: _user$project$Nim$checkIfFinished(
-						A2(_user$project$Nim$moveIfValid, _p11._0, model)),
+					_0: A2(_user$project$Nim$humanRemovesMatch, _p16._0, model),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'ComputerMoves':
-				var _p12 = model.player;
-				if (_p12.ctor === 'Human') {
+				var _p17 = model.player;
+				if (_p17.ctor === 'Human') {
 					return {
 						ctor: '_Tuple2',
 						_0: A2(_user$project$Nim$addText, 'Hey, You move!', model),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				} else {
-					if (_user$project$Nim$noWinnerMove(model.board)) {
-						var maxIndex = _elm_lang$core$List$length(
-							_user$project$Nim$rowsWithMatches(model.board)) - 1;
-						return {
-							ctor: '_Tuple2',
-							_0: model,
-							_1: A2(
-								_elm_lang$core$Random$generate,
-								_user$project$Nim$GetRandomMatchesForRowAt,
-								A2(_elm_lang$core$Random$int, 0, maxIndex))
-						};
-					} else {
-						return {
-							ctor: '_Tuple2',
-							_0: _user$project$Nim$afterComputerMoves(
-								_user$project$Nim$winnerMove(model)),
-							_1: _elm_lang$core$Platform_Cmd$none
-						};
-					}
+					return _user$project$Nim$computerMoves(model);
 				}
-			case 'GetRandomMatchesForRowAt':
-				var _p13 = A2(
-					_user$project$Nim$get,
-					_p11._0,
-					_user$project$Nim$rowsWithMatches(model.board));
-				if (_p13.ctor === 'Nothing') {
-					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
-				} else {
-					var _p15 = _p13._0;
-					var _p14 = A2(_user$project$Nim$matchesInRow, _p15, model.board);
-					if (_p14.ctor === 'Nothing') {
-						return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
-					} else {
-						return {
-							ctor: '_Tuple2',
-							_0: _elm_lang$core$Native_Utils.update(
-								model,
-								{
-									currentRow: _elm_lang$core$Maybe$Just(_p15)
-								}),
-							_1: A2(
-								_elm_lang$core$Random$generate,
-								_user$project$Nim$RemoveMatchesFromCurrentRow,
-								A2(_elm_lang$core$Random$int, 1, _p14._0))
-						};
-					}
-				}
-			case 'RemoveMatchesFromCurrentRow':
-				var _p16 = model.currentRow;
-				if (_p16.ctor === 'Just') {
-					return {
-						ctor: '_Tuple2',
-						_0: _user$project$Nim$afterComputerMoves(
-							A3(_user$project$Nim$removeMatches, _p16._0, _p11._0, model)),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				} else {
-					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
-				}
+			case 'GenerateRandomMatchesForRowAt':
+				return A2(_user$project$Nim$generateRandomMatches, _p16._0, model);
+			case 'RemoveMatchesRandom':
+				return {
+					ctor: '_Tuple2',
+					_0: A2(_user$project$Nim$removeFromCurrentRow, _p16._0, model),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
 			case 'Undo':
 				return {
 					ctor: '_Tuple2',
@@ -9545,7 +9582,7 @@ var _user$project$Nim$update = F2(
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			default:
-				return {ctor: '_Tuple2', _0: _user$project$Nim$emptyModel, _1: _elm_lang$core$Platform_Cmd$none};
+				return _user$project$Nim$init;
 		}
 	});
 var _user$project$Nim$ComputerMoves = {ctor: 'ComputerMoves'};
@@ -9674,7 +9711,7 @@ var _user$project$Nim$main = _elm_lang$html$Html$program(
 		init: _user$project$Nim$init,
 		view: _user$project$Nim$view,
 		update: _user$project$Nim$update,
-		subscriptions: function (_p17) {
+		subscriptions: function (_p18) {
 			return _elm_lang$core$Platform_Sub$none;
 		}
 	})();
