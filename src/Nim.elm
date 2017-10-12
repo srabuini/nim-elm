@@ -13,7 +13,7 @@ main =
         { init = init
         , view = view
         , update = update
-        , subscriptions = (\_ -> Sub.none)
+        , subscriptions = \_ -> Sub.none
         }
 
 
@@ -335,6 +335,14 @@ addText message model =
     { model | text = message }
 
 
+returnText : String -> Model -> ( Model, Cmd Msg )
+returnText message model =
+    ( model
+        |> addText message
+    , Cmd.none
+    )
+
+
 incrementMatches : Model -> Model
 incrementMatches model =
     { model | currentMatches = model.currentMatches + 1 }
@@ -357,17 +365,19 @@ setUndoButtonDisabled value model =
     { model | undoButtonDisabled = value }
 
 
-undo : Model -> Model
+undo : Model -> ( Model, Cmd Msg )
 undo model =
     case model.currentRow of
         Nothing ->
-            model
+            ( model, Cmd.none )
 
         Just row ->
-            model
+            ( model
                 |> addMatch row
                 |> addText "I think that was a good move..."
                 |> setUndoButton
+            , Cmd.none
+            )
 
 
 addMatch : Int -> Model -> Model
@@ -404,26 +414,34 @@ addMatch row model =
             }
 
 
-humanRemovesMatch : Int -> Model -> Model
+humanRemovesMatch : Int -> Model -> ( Model, Cmd Msg )
 humanRemovesMatch row model =
-    model
+    ( model
         |> moveIfValid row
         |> checkIfFinished
+    , Cmd.none
+    )
 
 
 computerMoves : Model -> ( Model, Cmd Msg )
 computerMoves model =
-    if noWinnerMove model.board then
-        let
-            maxIndex =
-                List.length (rowsWithMatches model.board) - 1
-        in
-        ( model, Random.generate GenerateRandomMatchesForRowAt (Random.int 0 maxIndex) )
-    else
-        ( model
-            |> computerPlay Winner
-        , Cmd.none
-        )
+    case model.player of
+        Human ->
+            model
+                |> returnText "Hey, You move!"
+
+        _ ->
+            if noWinnerMove model.board then
+                let
+                    maxIndex =
+                        List.length (rowsWithMatches model.board) - 1
+                in
+                ( model, Random.generate GenerateRandomMatchesForRowAt (Random.int 0 maxIndex) )
+            else
+                ( model
+                    |> computerPlay Winner
+                , Cmd.none
+                )
 
 
 generateRandomMatches : Int -> Model -> ( Model, Cmd Msg )
@@ -443,52 +461,41 @@ generateRandomMatches index model =
                     )
 
 
-removeFromCurrentRow : Int -> Model -> Model
+removeFromCurrentRow : Int -> Model -> ( Model, Cmd Msg )
 removeFromCurrentRow matches model =
     case model.currentRow of
         Just row ->
-            model
+            ( model
                 |> computerPlay (Random row matches)
+            , Cmd.none
+            )
 
         Nothing ->
-            model
+            ( model, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         RemoveMatch row ->
-            ( model
+            model
                 |> humanRemovesMatch row
-            , Cmd.none
-            )
 
         ComputerMoves ->
-            case model.player of
-                Human ->
-                    ( model
-                        |> addText "Hey, You move!"
-                    , Cmd.none
-                    )
-
-                _ ->
-                    model
-                        |> computerMoves
+            model
+                |> computerMoves
 
         GenerateRandomMatchesForRowAt index ->
-            model |> generateRandomMatches index
+            model
+                |> generateRandomMatches index
 
         RemoveMatchesRandom matches ->
-            ( model
+            model
                 |> removeFromCurrentRow matches
-            , Cmd.none
-            )
 
         Undo ->
-            ( model
+            model
                 |> undo
-            , Cmd.none
-            )
 
         Restart ->
             init
